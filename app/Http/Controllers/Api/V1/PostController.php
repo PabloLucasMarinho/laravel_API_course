@@ -11,62 +11,64 @@ use Illuminate\Support\Facades\Auth;
 
 class PostController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        $user = request()->user();
-        $posts = $user->post()->paginate();
-        return PostResource::collection($posts);
-    }
+  /**
+   * Display a listing of the resource.
+   */
+  public function index()
+  {
+    $user = request()->user();
+    $posts = $user->post()->paginate();
+    return PostResource::collection($posts);
+  }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StorePostRequest $request)
-    {
-        $data = $request->validated();
-        $data['author_id'] = $request->user()->id;
+  /**
+   * Store a newly created resource in storage.
+   */
+  public function store(StorePostRequest $request)
+  {
+    $data = $request->validated();
+    $data['author_id'] = $request->user()->id;
 
-        $post = Post::create($data);
+    $post = Post::create($data);
 
-        return response()->json(new PostResource($post), 201);
-    }
+    return response()->json(new PostResource($post), 201);
+  }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Post $post)
-    {
-        $user = request()->user();
-        if ($user->id != $post->author_id) {
-            abort(403, 'Access Forbiden');
-        }
-        return response()->json(new PostResource($post));
-    }
+  /**
+   * Display the specified resource.
+   */
+  public function show(Post $post)
+  {
+    abort_if(Auth::id() != $post->author_id, 403, 'Access Forbiden');
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Post $post)
-    {
-        $data = $request->validate([
-            'title' => 'required|string|min:2',
-            'body' => ['required', 'string', 'min:2']
-        ]);
+    return response()->json(new PostResource($post));
+  }
 
-        $post->update($data);
+  /**
+   * Update the specified resource in storage.
+   */
+  public function update(Request $request, Post $post)
+  {
+    abort_if(Auth::id() != $post->author_id, 403, 'Access Forbiden');
 
-        return new PostResource($post);
-    }
+    $data = $request->validate([
+      'title' => 'required|string|min:2',
+      'body' => ['required', 'string', 'min:2']
+    ]);
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Post $post)
-    {
-        $post->delete();
-        return response()->noContent();
-    }
+    $post->update($data);
+
+    return new PostResource($post);
+  }
+
+  /**
+   * Remove the specified resource from storage.
+   */
+  public function destroy(Post $post)
+  {
+    abort_if(Auth::id() != $post->author_id, 403, 'Access Forbiden');
+
+    $post->delete();
+    return response()->noContent();
+  }
 }

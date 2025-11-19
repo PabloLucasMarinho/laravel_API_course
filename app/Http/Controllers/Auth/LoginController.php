@@ -33,7 +33,7 @@ class LoginController extends Controller
   public function destroy(Request $request): Response
   {
     $user = $request->user();
-    // $user->currentAccessToken()->delete();
+    $user->currentAccessToken()->delete();
 
     return response()->noContent();
   }
